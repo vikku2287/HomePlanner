@@ -1,15 +1,16 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { suggest } from "@/lib/assistant";
 import { errorResponse } from "@/lib/http";
-import { getStore } from "@/lib/store";
+import { requireFamily } from "@/lib/session";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
+  const ctx = await requireFamily();
+  if (ctx instanceof NextResponse) return ctx;
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "ANTHROPIC_API_KEY is not set." }, { status: 503 });
   }
   try {
-    const timeZone = req.nextUrl.searchParams.get("timeZone") ?? "UTC";
-    return NextResponse.json(await suggest(getStore(), timeZone));
+    return NextResponse.json(await suggest(ctx.store, ctx.family));
   } catch (err) {
     return errorResponse(err);
   }
