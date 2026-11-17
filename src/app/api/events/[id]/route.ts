@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { errorResponse } from "@/lib/http";
-import { getStore } from "@/lib/store";
+import { requireFamily } from "@/lib/session";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Params) {
+  const ctx = await requireFamily();
+  if (ctx instanceof NextResponse) return ctx;
   try {
-    const updated = await getStore().updateEvent((await params).id, await req.json());
+    const updated = await ctx.store.updateEvent((await params).id, await req.json());
     return updated
       ? NextResponse.json(updated)
       : NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -16,6 +18,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const ok = await getStore().deleteEvent((await params).id);
+  const ctx = await requireFamily();
+  if (ctx instanceof NextResponse) return ctx;
+  const ok = await ctx.store.deleteEvent((await params).id);
   return ok ? new NextResponse(null, { status: 204 }) : NextResponse.json({ error: "Not found" }, { status: 404 });
 }

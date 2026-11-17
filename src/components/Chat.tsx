@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 
 type Turn = { role: "user" | "assistant"; content: string };
 
-export function Chat({ timeZone, onChange }: { timeZone: () => string; onChange: () => void }) {
+export function Chat({ onChange }: { onChange: () => void }) {
   const [turns, setTurns] = useState<Turn[]>([
     { role: "assistant", content: "Hi! Tell me what's coming up and I'll keep the family plan up to date." },
   ]);
@@ -24,7 +24,7 @@ export function Chat({ timeZone, onChange }: { timeZone: () => string; onChange:
         method: "POST",
         headers: { "content-type": "application/json" },
         // The greeting is UI-only; the conversation sent to Claude starts with the first user turn.
-        body: JSON.stringify({ messages: next.slice(1), timeZone: timeZone() }),
+        body: JSON.stringify({ messages: next.slice(1) }),
       });
       const body = await res.json();
       setTurns([...next, { role: "assistant", content: res.ok ? body.reply : `⚠️ ${body.error}` }]);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dueReminders, nextOccurrence } from "@/lib/reminders";
+import { dueReminders, nextOccurrence, occurrencesBetween } from "@/lib/reminders";
 import type { PlanEvent } from "@/lib/types";
 
 function event(overrides: Partial<PlanEvent>): PlanEvent {
@@ -11,6 +11,7 @@ function event(overrides: Partial<PlanEvent>): PlanEvent {
     memberIds: [],
     recurrence: "none",
     done: false,
+    allDay: false,
     ...overrides,
   };
 }
@@ -67,5 +68,23 @@ describe("dueReminders", () => {
       60,
     );
     expect(due).toEqual([]);
+  });
+});
+
+describe("occurrencesBetween", () => {
+  it("lists each weekly occurrence inside the range", () => {
+    const e = event({ start: "2026-11-03T18:15:00.000Z", recurrence: "weekly" });
+    const got = occurrencesBetween(e, new Date("2026-11-09T00:00:00Z"), new Date("2026-11-30T00:00:00Z"));
+    expect(got.map((d) => d.toISOString())).toEqual([
+      "2026-11-10T18:15:00.000Z",
+      "2026-11-17T18:15:00.000Z",
+      "2026-11-24T18:15:00.000Z",
+    ]);
+  });
+
+  it("returns a one-off event only when it falls in the range", () => {
+    const e = event({ start: "2026-11-18T09:00:00.000Z" });
+    expect(occurrencesBetween(e, new Date("2026-11-16T00:00:00Z"), new Date("2026-11-23T00:00:00Z"))).toHaveLength(1);
+    expect(occurrencesBetween(e, new Date("2026-11-23T00:00:00Z"), new Date("2026-11-30T00:00:00Z"))).toHaveLength(0);
   });
 });

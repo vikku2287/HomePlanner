@@ -32,6 +32,18 @@ export function nextOccurrence(event: PlanEvent, after: Date): Date | null {
   return next;
 }
 
+/** Start times of every occurrence of `event` that begins in [from, to). */
+export function occurrencesBetween(event: PlanEvent, from: Date, to: Date, max = 100): Date[] {
+  const out: Date[] = [];
+  let next = nextOccurrence(event, from);
+  while (next && next < to && out.length < max) {
+    out.push(next);
+    if (event.recurrence === "none") break;
+    next = nextOccurrence(event, new Date(next.getTime() + 1));
+  }
+  return out;
+}
+
 /**
  * Reminders whose fire time falls in the window [now, now + windowMinutes],
  * including ones already due for events that have not started yet.
